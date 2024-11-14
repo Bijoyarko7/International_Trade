@@ -77,6 +77,7 @@ install.packages("tictoc")  # for timing various operations
 install.packages("haven") # for reading and writing Stata dta files
 install.packages("latex2exp")  # for put LaTeX math characters into labels in figures
 install.packages("ggplot2")
+install.packages("patchwork")
 lapply(installed.packages()[, "Package"], require, character.only = TRUE)
 #---------------------------------------#
 #Reading Data#
@@ -191,7 +192,6 @@ ggplot(final_data, aes(x = year, y = gdp_share)) +
 
 
 #Q2
-
 print(summary(data$tradeflow_comtrade_d))
 # Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
 #  0        56      1372    369637     23815 563200374   3733458 
@@ -251,191 +251,375 @@ data %>%
 # Count zero and nonzero values by year
 # Calculate zero, nonzero counts, and their ratio by year
 
-data_counts <- data %>%
+data_counts <- data.frame(data %>%
   select(year, iso3_o, iso3_d, tradeflow_comtrade_d) %>%
   group_by(year) %>%
   summarise(
-    zero_count = sum(tradeflow_comtrade_d == 0, na.rm = TRUE),
+    zero_count = sum(is.na(tradeflow_comtrade_d)),
     nonzero_count = sum(tradeflow_comtrade_d > 0, na.rm = TRUE),
     total_count = zero_count + nonzero_count,
     nonzero_ratio = nonzero_count / total_count
   ) %>%
-  ungroup()
+  ungroup())
 
 print(data_counts,n=74)
 
-# # A tibble: 74 × 5
-# year zero_count nonzero_count total_count nonzero_ratio
-# <int>      <int>         <int>       <int>         <dbl>
-#   1  1948          0             0           0           NaN
-# 2  1949          0             0           0           NaN
-# 3  1950          0             0           0           NaN
-# 4  1951          0             0           0           NaN
-# 5  1952          0             0           0           NaN
-# 6  1953          0             0           0           NaN
-# 7  1954          0             0           0           NaN
-# 8  1955          0             0           0           NaN
-# 9  1956          0             0           0           NaN
-# 10  1957          0             0           0           NaN
-# 11  1958          0             0           0           NaN
-# 12  1959          0             0           0           NaN
-# 13  1960          0             0           0           NaN
-# 14  1961          0             0           0           NaN
-# 15  1962          0          5588        5588             1
-# 16  1963          0          6025        6025             1
-# 17  1964          0          6377        6377             1
-# 18  1965          0          7159        7159             1
-# 19  1966          0          7585        7585             1
-# 20  1967          0          8020        8020             1
-# 21  1968          0          8194        8194             1
-# 22  1969          0          8255        8255             1
-# 23  1970          0          9586        9586             1
-# 24  1971          0          9825        9825             1
-# 25  1972          0         10172       10172             1
-# 26  1973          0         10483       10483             1
-# 27  1974          0         11218       11218             1
-# 28  1975          0         11572       11572             1
-# 29  1976          0         11729       11729             1
-# 30  1977          0         11759       11759             1
-# 31  1978          0         11575       11575             1
-# 32  1979          0         11735       11735             1
-# 33  1980          0         11629       11629             1
-# 34  1981          0         11451       11451             1
-# 35  1982          0         10947       10947             1
-# 36  1983          0         11215       11215             1
-# 37  1984          0         10609       10609             1
-# 38  1985          0         10959       10959             1
-# 39  1986          0         10818       10818             1
-# 40  1987          0         10930       10930             1
-# 41  1988          0         11201       11201             1
-# 42  1989          0         11679       11679             1
-# 43  1990          0         12150       12150             1
-# 44  1991          0         11888       11888             1
-# 45  1992          0         13139       13139             1
-# 46  1993          0         13682       13682             1
-# 47  1994          0         14041       14041             1
-# 48  1995          0         16061       16061             1
-# 49  1996          0         17052       17052             1
-# 50  1997          0         18198       18198             1
-# 51  1998          0         18441       18441             1
-# 52  1999          0         19475       19475             1
-# 53  2000          0         22180       22180             1
-# 54  2001          0         22784       22784             1
-# 55  2002          0         23228       23228             1
-# 56  2003          0         23684       23684             1
-# 57  2004          0         23860       23860             1
-# 58  2005          0         23959       23959             1
-# 59  2006          0         24895       24895             1
-# 60  2007          0         25829       25829             1
-# 61  2008          0         26058       26058             1
-# 62  2009          0         25645       25645             1
-# 63  2010          0         26347       26347             1
-# 64  2011          0         26425       26425             1
-# 65  2012          0         26530       26530             1
-# 66  2013          0         26799       26799             1
-# 67  2014          0         26658       26658             1
-# 68  2015          0         27033       27033             1
-# 69  2016          0         27346       27346             1
-# 70  2017          0         27548       27548             1
-# 71  2018          0         27275       27275             1
-# 72  2019          0         25975       25975             1
-# 73  2020          0         23358       23358             1
-# 74  2021          0             0           0           NaN
+ggplot(data_counts, aes(x = year, y = nonzero_ratio)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red", size = 2) +
+  # Add vertical line for WTO formation
+  geom_vline(xintercept = 1995, linetype = "dashed", alpha = 0.5) +
+  # Adjust annotation position and size
+  annotate("text", x = 1997, y = 0.05, # Adjusted x and y coordinates
+           label = "WTO Formation", angle = 90, size = 3) + # Reduced text size
+  labs(
+    title = "Evolution of Non-Zero Trade Flows Over Time",
+    subtitle = "Proportion of reported trade flows (> 0.001)",
+    x = "Year",
+    y = "Share of Non-Zero Trade",
+    caption = "Source: CEPII Gravity Dataset"
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, max(data_counts$nonzero_ratio) * 1.1)
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    # Add some margin to ensure text fits
+    plot.margin = margin(t = 20, r = 20, b = 20, l = 20, unit = "pt")
+  )
 
-#plot(data_counts$year,data_counts$nonzero_ratio)
 
-check_data <- data %>%
-  select(year, iso3_o, iso3_d, tradeflow_comtrade_d) %>%
-  group_by(year) %>%
-  summarise(
-    zero_count = sum(tradeflow_comtrade_d == 0, na.rm = TRUE),
-    nonzero_count = sum(tradeflow_comtrade_d > 0, na.rm = TRUE),
-    na_count = sum(is.na(tradeflow_comtrade_d)),
-    total_rows = n()
+#Q3
+# Filtering for positive trade flows only and take logs
+gravity_data <- data %>%
+  filter(tradeflow_comtrade_d > 0) %>%  # only positive flows
+  mutate(
+    ln_trade = log(tradeflow_comtrade_d),
+    ln_dist = log(dist),
+    across(c(contig, fta_wto, comlang_off, col_dep_ever, gatt_o, gatt_d, wto_o, wto_d), ~replace_na(., 0)),
+    gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
+  )
+
+print(summary(gravity_data$tradeflow_comtrade_d))
+
+# models
+model1 <- feols(ln_trade ~ ln_dist | iso3_o^year + iso3_d^year, data = gravity_data)
+
+model2 <- feols(ln_trade ~ ln_dist + contig | iso3_o^year + iso3_d^year, data = gravity_data)
+
+model3 <- feols(ln_trade ~ ln_dist + contig + fta_wto | iso3_o^year + iso3_d^year, data = gravity_data)
+
+model4 <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto | iso3_o^year + iso3_d^year, data = gravity_data)
+
+model5 <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off | iso3_o^year + iso3_d^year, data = gravity_data)
+
+model6 <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off + col_dep_ever | iso3_o^year + iso3_d^year, data = gravity_data)
+
+# comparison table
+etable(model1, model2, model3, model4, model5, model6,
+       title = "Gravity Equation Estimates")
+
+
+#Q4
+# 1. Baseline (log-log without zeros)
+baseline_data <- data %>%
+  filter(year==2019, dist > 0, tradeflow_comtrade_d > 0) %>%  # Note: only positive trades
+  mutate(
+    ln_trade = log(tradeflow_comtrade_d),
+    ln_dist = log(dist),
+    across(c(contig, fta_wto, comlang_off, col_dep_ever, gatt_o, gatt_d, wto_o, wto_d), 
+           ~replace_na(., 0)),
+    gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
+  )
+
+# 2. Method i) ln(trade + 1)
+plus_one_data <- data %>%
+  filter(year==2019, dist > 0) %>%
+  mutate(
+    tradeflow_nonNA_0 = if_else(is.na(tradeflow_comtrade_d), 0, tradeflow_comtrade_d),
+    ln_trade = log(tradeflow_nonNA_0 + 1),
+    ln_dist = log(dist),
+    across(c(contig, fta_wto, comlang_off, col_dep_ever, gatt_o, gatt_d, wto_o, wto_d), 
+           ~replace_na(., 0)),
+    gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
+  )
+
+# Create safe minimum function
+safe_min <- function(x, default = NULL) {
+  if (length(x) == 0 || all(is.na(x))) {
+    return(default)
+  }
+  min(x, na.rm = TRUE)
+}
+
+# Method ii) Winsorization with global minimum fallback
+winsor_data <- data %>%
+  filter(year == 2019, dist > 0) %>%
+  # First calculate global minimum (from all non-zero trades)
+  mutate(
+    global_min = safe_min(tradeflow_comtrade_d[tradeflow_comtrade_d > 0])
   ) %>%
-  ungroup()
+  group_by(iso3_o) %>%
+  mutate(
+    # Check if country has any non-zero trades
+    has_trades = any(tradeflow_comtrade_d > 0, na.rm = TRUE),
+    # Use safe_min for country-specific minimum
+    country_min = safe_min(tradeflow_comtrade_d[tradeflow_comtrade_d > 0], global_min),
+    # Apply winsorization with guaranteed non-NA minimum
+    tradeflow_winsor = if_else(
+      is.na(tradeflow_comtrade_d) | tradeflow_comtrade_d == 0,
+      country_min,
+      tradeflow_comtrade_d
+    ),
+    ln_trade = log(tradeflow_winsor)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    ln_dist = log(dist),
+    across(c(contig, fta_wto, comlang_off, col_dep_ever, gatt_o, gatt_d, wto_o, wto_d), 
+           ~replace_na(., 0)),
+    gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
+  )
 
-print(check_data,n=74)
+# 4. Method iii) PPML
+ppml_data <- data %>%
+  filter(year==2019, dist > 0) %>%
+  mutate(
+    trade = if_else(is.na(tradeflow_comtrade_d), 0, tradeflow_comtrade_d),
+    ln_dist = log(dist),
+    across(c(contig, fta_wto, comlang_off, col_dep_ever, gatt_o, gatt_d, wto_o, wto_d), 
+           ~replace_na(., 0)),
+    gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
+  )
 
-# # A tibble: 74 × 5
-# year zero_count nonzero_count na_count total_rows
-# <int>      <int>         <int>    <int>      <int>
-#   1  1948          0             0    63504      63504
-# 2  1949          0             0    63504      63504
-# 3  1950          0             0    63504      63504
-# 4  1951          0             0    63504      63504
-# 5  1952          0             0    63504      63504
-# 6  1953          0             0    63504      63504
-# 7  1954          0             0    63504      63504
-# 8  1955          0             0    63504      63504
-# 9  1956          0             0    63504      63504
-# 10  1957          0             0    63504      63504
-# 11  1958          0             0    63504      63504
-# 12  1959          0             0    63504      63504
-# 13  1960          0             0    63504      63504
-# 14  1961          0             0    63504      63504
-# 15  1962          0          5588    57916      63504
-# 16  1963          0          6025    57479      63504
-# 17  1964          0          6377    57127      63504
-# 18  1965          0          7159    56345      63504
-# 19  1966          0          7585    55919      63504
-# 20  1967          0          8020    55484      63504
-# 21  1968          0          8194    55310      63504
-# 22  1969          0          8255    55249      63504
-# 23  1970          0          9586    53918      63504
-# 24  1971          0          9825    53679      63504
-# 25  1972          0         10172    53332      63504
-# 26  1973          0         10483    53021      63504
-# 27  1974          0         11218    52286      63504
-# 28  1975          0         11572    51932      63504
-# 29  1976          0         11729    51775      63504
-# 30  1977          0         11759    51745      63504
-# 31  1978          0         11575    51929      63504
-# 32  1979          0         11735    51769      63504
-# 33  1980          0         11629    51875      63504
-# 34  1981          0         11451    52053      63504
-# 35  1982          0         10947    52557      63504
-# 36  1983          0         11215    52289      63504
-# 37  1984          0         10609    52895      63504
-# 38  1985          0         10959    52545      63504
-# 39  1986          0         10818    52686      63504
-# 40  1987          0         10930    52574      63504
-# 41  1988          0         11201    52303      63504
-# 42  1989          0         11679    51825      63504
-# 43  1990          0         12150    51354      63504
-# 44  1991          0         11888    51616      63504
-# 45  1992          0         13139    50365      63504
-# 46  1993          0         13682    49822      63504
-# 47  1994          0         14041    49463      63504
-# 48  1995          0         16061    47443      63504
-# 49  1996          0         17052    46452      63504
-# 50  1997          0         18198    45306      63504
-# 51  1998          0         18441    45063      63504
-# 52  1999          0         19475    44029      63504
-# 53  2000          0         22180    41324      63504
-# 54  2001          0         22784    40720      63504
-# 55  2002          0         23228    40276      63504
-# 56  2003          0         23684    39820      63504
-# 57  2004          0         23860    39644      63504
-# 58  2005          0         23959    39545      63504
-# 59  2006          0         24895    38609      63504
-# 60  2007          0         25829    37675      63504
-# 61  2008          0         26058    37446      63504
-# 62  2009          0         25645    37859      63504
-# 63  2010          0         26347    37157      63504
-# 64  2011          0         26425    37079      63504
-# 65  2012          0         26530    36974      63504
-# 66  2013          0         26799    36705      63504
-# 67  2014          0         26658    36846      63504
-# 68  2015          0         27033    36471      63504
-# 69  2016          0         27346    36158      63504
-# 70  2017          0         27548    35956      63504
-# 71  2018          0         27275    36229      63504
-# 72  2019          0         25975    37529      63504
-# 73  2020          0         23358    40146      63504
-# 74  2021          0             0    63504      63504
+# Estimate all models
+model_baseline <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off + 
+                          col_dep_ever | iso3_o + iso3_d, data = baseline_data)
+
+model_plus_one <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off + 
+                          col_dep_ever | iso3_o + iso3_d, data = plus_one_data)
+
+model_winsor <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off + 
+                        col_dep_ever | iso3_o + iso3_d, data = winsor_data)
+
+model_ppml <- feglm(trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off + 
+                      col_dep_ever | iso3_o + iso3_d,
+                    family = quasipoisson(),
+                    data = ppml_data)
+#NOTE: 9/83 fixed-effects (20,872 observations) removed because of only 0 outcomes.
+
+# Create comparison table
+etable(model_baseline, model_plus_one, model_winsor, model_ppml,
+       cluster = ~iso3_o + iso3_d,
+       headers = c("Baseline\n(no zeros)", "ln(trade+1)", "Winsorized", "PPML"),
+       title = "Gravity Model Estimations for 2019",
+       notes = c(
+         "Standard errors clustered at origin and destination level",
+         "Baseline: Traditional log-log excluding zero trades",
+         "Method 1: Adding 1 before taking logarithm",
+         "Method 2: Winsorizing zero flows with origin country minimum",
+         "Method 3: PPML estimation (Santos Silva and Tenreyro, 2006)",
+         paste("Sample sizes:",
+               "\nBaseline:", nobs(model_baseline),
+               "\nln(trade+1):", nobs(model_plus_one),
+               "\nWinsorized:", nobs(model_winsor),
+               "\nPPML:", nobs(model_ppml))
+       ))
+
+# Save results
+saveRDS(list(
+  baseline = model_baseline,
+  plus_one = model_plus_one,
+  winsor = model_winsor,
+  ppml = model_ppml
+), "gravity_results_comparison.rds")
+
+#5
+# Prepare data with proper logging
+model_data <- data %>%
+  filter(tradeflow_comtrade_d > 0) %>%
+  mutate(
+    ln_trade = log(tradeflow_comtrade_d),
+    ln_dist = log(dist),  # Log the distance variable
+    year_factor = as.factor(year)
+  )
+
+# Estimate the model with logged distance
+gravity_model <- feols(
+  ln_trade ~ ln_dist:year_factor | iso3_o^year + iso3_d^year,
+  data = model_data
+)
+
+# Extract coefficients and standard errors
+distance_effects <- coef(gravity_model)
+se_distance <- sqrt(diag(vcov(gravity_model)))
+
+# Create plot data
+plot_data <- data.frame(
+  year = as.numeric(gsub("ln_dist:year_factor", "", names(distance_effects))),
+  coefficient = distance_effects,
+  se = se_distance
+) %>%
+  mutate(
+    ci_lower = coefficient - 1.96 * se,
+    ci_upper = coefficient + 1.96 * se
+  )
+
+# Create the plot
+ggplot(plot_data, aes(x = year, y = coefficient)) +
+  geom_line(color = "blue", size = 1) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), 
+              alpha = 0.2, fill = "blue") +
+  geom_point(color = "blue", size = 3) +
+  theme_minimal() +
+  labs(
+    title = "Evolution of Distance Effect in Gravity Model Over Time",
+    x = "Year",
+    y = "Elasticity of Trade to Distance (with 95% CI)",
+    caption = "Note: More negative values indicate stronger distance effects"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 11),
+    panel.grid.minor = element_blank()
+  ) +
+  scale_y_continuous(
+    labels = scales::number_format(accuracy = 0.1),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50")
+
+# Print summary to verify reasonable coefficients
+print(summary(distance_effects))
 
 
+#6
+# Data preparation
+prepare_data <- function(data, origin_country = "KOR", base_country = "PRT", year_select = 2019) {
+  
+  # Filter for selected year and origin country
+  data_filtered <- data %>%
+    filter(year == year_select)
+  
+  # Prepare EU data (Figure 1)
+  eu_countries <- data_filtered %>%
+    filter(eu_d == 1) %>%
+    pull(iso3_d) %>%
+    unique()
+  
+  # For Figure 1 (normalized to Portugal)
+  eu_trade_data <- data_filtered %>%
+    filter(
+      iso3_o == origin_country,
+      iso3_d %in% eu_countries
+    ) %>%
+    # Get Portugal's GDP and trade for normalization
+    left_join(
+      data_filtered %>%
+        filter(iso3_o == origin_country, iso3_d == base_country) %>%
+        select(base_gdp = gdp_d, base_trade = tradeflow_comtrade_d),
+      by = character()
+    ) %>%
+    mutate(
+      gdp_share = gdp_d / base_gdp,
+      trade_share = tradeflow_comtrade_d / base_trade
+    ) %>%
+    select(iso3_d, gdp_share, trade_share)
+  
+  # For Figure 2
+  distance_data <- data_filtered %>%
+    filter(iso3_o == origin_country) %>%
+    mutate(
+      trade_gdp_share = (tradeflow_comtrade_d / gdp_d) * 100,
+      # Create group indicators
+      group = case_when(
+        eu_d == 1 ~ "EU",  # If destination is EU
+        fta_wto == 1 ~ "FTA", # If has FTA
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(!is.na(trade_gdp_share), trade_gdp_share > 0) # Remove zeros and NAs
+  
+  list(eu_trade = eu_trade_data, distance = distance_data)
+}
+
+# Plot functions
+eu_trade_plot <- function(data, type = "exports") {
+  ggplot(data, aes(x = gdp_share, y = trade_share)) +
+    geom_point(color = "blue") +
+    geom_text(aes(label = iso3_d), hjust = -0.2, color = "blue") +
+    geom_smooth(method = "lm", color = "black") +
+    scale_x_log10(breaks = c(0.05, 0.1, 0.5, 1, 5, 10)) +
+    scale_y_log10(breaks = c(0.05, 0.1, 0.5, 1, 5, 10)) +
+    labs(
+      title = paste("South Korea's", type, "to EU, 2019"),
+      x = "GDP (PRT = 1)",
+      y = paste(type, "(PRT = 1)")
+    ) +
+    theme_minimal() +
+    # Add regression statistics
+    annotate("text", x = 0.1, y = max(data$trade_share),
+             label = paste("slope =", 
+                           round(coef(lm(log(trade_share) ~ log(gdp_share), data))[2], 3)),
+             hjust = 0) +
+    annotate("text", x = 0.1, y = max(data$trade_share)/1.5,
+             label = paste("fit =", 
+                           round(summary(lm(log(trade_share) ~ log(gdp_share), data))$r.squared, 2)),
+             hjust = 0)
+}
+
+distance_plot <- function(data, type = "exports") {
+  ggplot(data, aes(x = dist)) +
+    geom_point(aes(y = trade_gdp_share, color = group, shape = group)) +
+    geom_smooth(aes(y = trade_gdp_share), method = "lm", color = "black") +
+    scale_x_log10(breaks = c(500, 1000, 2000, 5000, 10000, 20000),
+                  labels = scales::comma) +
+    scale_y_log10() +
+    labs(
+      title = paste("South Korea's", type, "(2019)"),
+      x = "Distance in kms",
+      y = paste(type, "/Partner's GDP (%, log scale)")
+    ) +
+    theme_minimal() +
+    # Add regression statistics
+    annotate("text", x = min(data$dist), y = max(data$trade_gdp_share),
+             label = paste("slope =", 
+                           round(coef(lm(log(trade_gdp_share) ~ log(dist), data))[2], 3)),
+             hjust = 0) +
+    scale_color_manual(name = "",
+                       values = c("black", "blue", "darkgreen"),
+                       labels = c("Other", "EU", "FTA")) +
+    scale_shape_manual(name = "",
+                       values = c(15, 16, 17),
+                       labels = c("Other", "EU", "FTA"))
+}
+
+# Create plots
+# For exports
+prepared_data_exports <- prepare_data(data, "KOR", "PRT", 2019)
+p1 <- eu_trade_plot(prepared_data_exports$eu_trade, "exports")
+p3 <- distance_plot(prepared_data_exports$distance, "exports")
+
+# For imports
+prepared_data_imports <- prepare_data(data %>% 
+                                        mutate(tradeflow_comtrade_d = tradeflow_comtrade_o), 
+                                      "KOR", "PRT", 2019)
+p2 <- eu_trade_plot(prepared_data_imports$eu_trade, "imports")
+p4 <- distance_plot(prepared_data_imports$distance, "imports")
+
+# Combine plots
+figure1 <- p1 + p2
+figure2 <- p3 + p4
+
+# Display plots
+figure1
+figure2
 
 
 
