@@ -1,53 +1,17 @@
 #---------------------------------------#
 #Author: BIJOY RATAN GHOSH
 #Project: Gravity (International Trade)
-#Last upated: 11/10/24
+#Last upated: 11/18/24
+#---------------------------------------#
+#Reading Data#
+data <- readRDS("/Users/bijoyratanghosh/Library/CloudStorage/Box-Box/sem 3/Int Trade/Empirical homework/HW2/Data/Gravity_V202211.rds")
+
+result_path <- "/Users/bijoyratanghosh/Library/CloudStorage/Box-Box/sem 3/Int Trade/Empirical homework/HW2/Results/"
+
 #---------------------------------------#
 #Package Installation#
 getwd()
 R.Version()
-# $platform
-# [1] "aarch64-apple-darwin20"
-# 
-# $arch
-# [1] "aarch64"
-# 
-# $os
-# [1] "darwin20"
-# 
-# $system
-# [1] "aarch64, darwin20"
-# 
-# $status
-# [1] ""
-# 
-# $major
-# [1] "4"
-# 
-# $minor
-# [1] "4.2"
-# 
-# $year
-# [1] "2024"
-# 
-# $month
-# [1] "10"
-# 
-# $day
-# [1] "31"
-# 
-# $`svn rev`
-# [1] "87279"
-# 
-# $language
-# [1] "R"
-# 
-# $version.string
-# [1] "R version 4.4.2 (2024-10-31)"
-# 
-# $nickname
-# [1] "Pile of Leaves"
-
 install.packages("dplyr")
 install.packages("data.table")  # all data manipulation (essential for all scripts)
 # upon installation, you will be asked Do you want to install from sources the package which needs compilation? (Yes/no/cancel) 
@@ -79,26 +43,11 @@ install.packages("latex2exp")  # for put LaTeX math characters into labels in fi
 install.packages("ggplot2")
 install.packages("patchwork")
 lapply(installed.packages()[, "Package"], require, character.only = TRUE)
-#---------------------------------------#
-#Reading Data#
-data <- readRDS("/Users/bijoyratanghosh/Library/CloudStorage/Box-Box/sem 3/Int Trade/Empirical homework/Gravity/Data/Gravity_rds_V202211/Gravity_V202211.rds")
+
 #---------------------------------------#
 #Q1.
 data %>%
   colnames()
-# [1] "year"                   "country_id_o"           "country_id_d"           "iso3_o"                 "iso3_d"                 "iso3num_o"              "iso3num_d"             
-# [8] "country_exists_o"       "country_exists_d"       "gmt_offset_2020_o"      "gmt_offset_2020_d"      "distw_harmonic"         "distw_arithmetic"       "distw_harmonic_jh"     
-# [15] "distw_arithmetic_jh"    "dist"                   "main_city_source_o"     "main_city_source_d"     "distcap"                "contig"                 "diplo_disagreement"    
-# [22] "scaled_sci_2021"        "comlang_off"            "comlang_ethno"          "comcol"                 "col45"                  "legal_old_o"            "legal_old_d"           
-# [29] "legal_new_o"            "legal_new_d"            "comleg_pretrans"        "comleg_posttrans"       "transition_legalchange" "comrelig"               "heg_o"                 
-# [36] "heg_d"                  "col_dep_ever"           "col_dep"                "col_dep_end_year"       "col_dep_end_conflict"   "empire"                 "sibling_ever"          
-# [43] "sibling"                "sever_year"             "sib_conflict"           "pop_o"                  "pop_d"                  "gdp_o"                  "gdp_d"                 
-# [50] "gdpcap_o"               "gdpcap_d"               "pop_source_o"           "pop_source_d"           "gdp_source_o"           "gdp_source_d"           "gdp_ppp_o"             
-# [57] "gdp_ppp_d"              "gdpcap_ppp_o"           "gdpcap_ppp_d"           "pop_pwt_o"              "pop_pwt_d"              "gdp_ppp_pwt_o"          "gdp_ppp_pwt_d"         
-# [64] "gatt_o"                 "gatt_d"                 "wto_o"                  "wto_d"                  "eu_o"                   "eu_d"                   "fta_wto"               
-# [71] "fta_wto_raw"            "rta_coverage"           "rta_type"               "entry_cost_o"           "entry_cost_d"           "entry_proc_o"           "entry_proc_d"          
-# [78] "entry_time_o"           "entry_time_d"           "entry_tp_o"             "entry_tp_d"             "tradeflow_comtrade_o"   "tradeflow_comtrade_d"   "tradeflow_baci"        
-# [85] "manuf_tradeflow_baci"   "tradeflow_imf_o"        "tradeflow_imf_d"       
 
 data1 <-data %>%
   select(year,iso3_o,iso3_d,fta_wto,gdp_o)
@@ -137,32 +86,28 @@ final_data <- data.frame(data3 %>%
   ) %>%
   arrange(year))  # Order by year for easier inspection
 
-
-
-# Basic line plot with improvements
-ggplot(final_data, aes(x = year, y = gdp_share)) +
-  geom_line(color = "blue", size = 1) +  # Connected line
-  geom_point(color = "red", size = 2) +  # Points for each observation
-  labs(
-    title = "Share of World GDP Covered by Free Trade Agreements",
-    subtitle = "Evolution over time",
-    x = "Year",
-    y = "Share of World GDP",
-    caption = "Source: Your dataset"
-  ) +
-  scale_y_continuous(
-    labels = scales::percent,  # Format as percentage
-    limits = c(0, 1)  # Assuming share is between 0 and 1
-  ) +
-  theme_minimal() +  # Clean theme
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title = element_text(face = "bold"),
-    panel.grid.minor = element_blank()  # Remove minor gridlines
-  )
-
-# For an even more informative plot, you could add:
-ggplot(final_data, aes(x = year, y = gdp_share)) +
+# # Basic line plot with improvements
+# p1 <- ggplot(final_data, aes(x = year, y = gdp_share)) +
+#   geom_line(color = "blue", size = 1) +  # Connected line
+#   geom_point(color = "red", size = 2) +  # Points for each observation
+#   labs(
+#     title = "Share of World GDP Covered by Free Trade Agreements",
+#     subtitle = "Evolution over time",
+#     x = "Year",
+#     y = "Share of World GDP",
+#     caption = "Source: Your dataset"
+#   ) +
+#   scale_y_continuous(
+#     labels = scales::percent,  # Format as percentage
+#     limits = c(0, 1)  # Assuming share is between 0 and 1
+#   ) +
+#   theme_minimal() +  # Clean theme
+#   theme(
+#     plot.title = element_text(face = "bold", size = 14),
+#     axis.title = element_text(face = "bold"),
+#     panel.grid.minor = element_blank()  # Remove minor gridlines
+#   )
+p2 <- ggplot(final_data, aes(x = year, y = gdp_share)) +
   geom_line(color = "blue", size = 1) +
   geom_point(color = "red", size = 2) +
   # Add smoothed trend line
@@ -181,8 +126,8 @@ ggplot(final_data, aes(x = year, y = gdp_share)) +
   ) +
   # Rotate x-axis labels if needed
   theme_minimal() +
-  geom_vline(xintercept = 1995, linetype = "dashed", alpha = 0.5) +
-  annotate("text", x = 1996, y = 0.1, label = "WTO Formation", angle = 90) +
+  #geom_vline(xintercept = 1995, linetype = "dashed", alpha = 0.5) +
+  #annotate("text", x = 1996, y = 0.1, label = "WTO Formation", angle = 90) +
   theme(
     plot.title = element_text(face = "bold", size = 14),
     axis.title = element_text(face = "bold"),
@@ -190,11 +135,11 @@ ggplot(final_data, aes(x = year, y = gdp_share)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
+ggsave(paste0(result_path,"/Q1. FTA Coverage of World GDP.pdf"),plot=p2, width=6, height=4)
+
 
 #Q2
 print(summary(data$tradeflow_comtrade_d))
-# Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
-#  0        56      1372    369637     23815 563200374   3733458 
 
 # Check for truly zero values
 zero_check <- data %>%
@@ -203,8 +148,6 @@ zero_check <- data %>%
 print(zero_check)
 #  n
 #1 0
-
-# Look at the distribution of very small values
 small_values <- data %>%
   filter(tradeflow_comtrade_d > 0 & tradeflow_comtrade_d < 0.002) %>%
   count(tradeflow_comtrade_d) %>%
@@ -216,7 +159,6 @@ print(small_values)
 # *                <dbl> <int>
 #   1                0.001   176
 
-# Alternative check:
 value_check <- data %>%
   summarise(
     exact_zeros = sum(tradeflow_comtrade_d == 0, na.rm = TRUE),
@@ -235,22 +177,6 @@ data %>%
   select(year, iso3_o, iso3_d, tradeflow_comtrade_d) %>%
   head(10)
 
-# 
-#    year iso3_o iso3_d tradeflow_comtrade_d
-# 1  2002    ABW    MYS                0.001
-# 2  2005    AGO    NER                0.001
-# 3  2003    AIA    ALB                0.001
-# 4  2015    AIA    UGA                0.001
-# 5  2019    AND    KAZ                0.001
-# 6  2005    ANT    UKR                0.001
-# 7  2006    ANT    VCT                0.001
-# 8  2012    ARG    BWA                0.001
-# 9  2013    ARM    LKA                0.001
-# 10 2011    ASM    BRB                0.001
-
-# Count zero and nonzero values by year
-# Calculate zero, nonzero counts, and their ratio by year
-
 data_counts <- data.frame(data %>%
   select(year, iso3_o, iso3_d, tradeflow_comtrade_d) %>%
   group_by(year) %>%
@@ -262,16 +188,14 @@ data_counts <- data.frame(data %>%
   ) %>%
   ungroup())
 
-print(data_counts,n=74)
-
-ggplot(data_counts, aes(x = year, y = nonzero_ratio)) +
+p3 <- ggplot(data_counts, aes(x = year, y = nonzero_ratio)) +
   geom_line(color = "blue", size = 1) +
   geom_point(color = "red", size = 2) +
   # Add vertical line for WTO formation
-  geom_vline(xintercept = 1995, linetype = "dashed", alpha = 0.5) +
+  #geom_vline(xintercept = 1995, linetype = "dashed", alpha = 0.5) +
   # Adjust annotation position and size
-  annotate("text", x = 1997, y = 0.05, # Adjusted x and y coordinates
-           label = "WTO Formation", angle = 90, size = 3) + # Reduced text size
+  #annotate("text", x = 1997, y = 0.05, # Adjusted x and y coordinates
+           #label = "WTO Formation", angle = 90, size = 3) + # Reduced text size
   labs(
     title = "Evolution of Non-Zero Trade Flows Over Time",
     subtitle = "Proportion of reported trade flows (> 0.001)",
@@ -293,6 +217,7 @@ ggplot(data_counts, aes(x = year, y = nonzero_ratio)) +
     plot.margin = margin(t = 20, r = 20, b = 20, l = 20, unit = "pt")
   )
 
+ggsave(paste0(result_path,"/Q2. Evolution of Non-Zero Trade Flows Over Time.pdf"),plot=p3, width=6, height=4)
 
 #Q3
 # Filtering for positive trade flows only and take logs
@@ -322,13 +247,13 @@ model6 <- feols(ln_trade ~ ln_dist + contig + fta_wto + gatt_wto + comlang_off +
 
 # comparison table
 etable(model1, model2, model3, model4, model5, model6,
-       title = "Gravity Equation Estimates")
+       title = "Gravity Equation Estimates", file = paste0(result_path,"/Q3. Gravity Equation Estimates.tex"))
 
 
 #Q4
-# 1. Baseline (log-log without zeros)
+# Baseline (log-log without zeros)
 baseline_data <- data %>%
-  filter(year==2019, dist > 0, tradeflow_comtrade_d > 0) %>%  # Note: only positive trades
+  filter(year==2019, dist > 0, tradeflow_comtrade_d > 0) %>%  #only positive trades
   mutate(
     ln_trade = log(tradeflow_comtrade_d),
     ln_dist = log(dist),
@@ -337,7 +262,7 @@ baseline_data <- data %>%
     gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
   )
 
-# 2. Method i) ln(trade + 1)
+# Method i) ln(trade + 1)
 plus_one_data <- data %>%
   filter(year==2019, dist > 0) %>%
   mutate(
@@ -386,7 +311,7 @@ winsor_data <- data %>%
     gatt_wto = if_else((gatt_d==1 & gatt_o==1) | (wto_d==1 & wto_o==1), 1, 0)
   )
 
-# 4. Method iii) PPML
+# Method iii) PPML
 ppml_data <- data %>%
   filter(year==2019, dist > 0) %>%
   mutate(
@@ -429,17 +354,18 @@ etable(model_baseline, model_plus_one, model_winsor, model_ppml,
                "\nln(trade+1):", nobs(model_plus_one),
                "\nWinsorized:", nobs(model_winsor),
                "\nPPML:", nobs(model_ppml))
-       ))
+       ),
+       file = paste0(result_path,"/Q4. Gravity Equation Estimates incorporating zero.tex"))
 
 # Save results
-saveRDS(list(
-  baseline = model_baseline,
-  plus_one = model_plus_one,
-  winsor = model_winsor,
-  ppml = model_ppml
-), "gravity_results_comparison.rds")
+# saveRDS(list(
+#   baseline = model_baseline,
+#   plus_one = model_plus_one,
+#   winsor = model_winsor,
+#   ppml = model_ppml
+# ), "gravity_results_comparison.rds")
 
-#5
+#Q5
 # Prepare data with proper logging
 model_data <- data %>%
   filter(tradeflow_comtrade_d > 0) %>%
@@ -471,7 +397,7 @@ plot_data <- data.frame(
   )
 
 # Create the plot
-ggplot(plot_data, aes(x = year, y = coefficient)) +
+p4 <- ggplot(plot_data, aes(x = year, y = coefficient)) +
   geom_line(color = "blue", size = 1) +
   geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), 
               alpha = 0.2, fill = "blue") +
@@ -498,8 +424,10 @@ ggplot(plot_data, aes(x = year, y = coefficient)) +
 # Print summary to verify reasonable coefficients
 print(summary(distance_effects))
 
+ggsave(paste0(result_path,"/Q5. Evolution of distance coefficient.pdf"),plot=p4, width=6, height=4)
 
-#6
+
+#Q6
 # Data preparation
 prepare_data <- function(data, origin_country = "KOR", base_country = "PRT", year_select = 2019) {
   
@@ -621,19 +549,7 @@ figure2 <- p3 + p4
 figure1
 figure2
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Save plots
+ggsave(paste0(result_path,"/Q6.a. Exports-Imports to EU.pdf"),plot=figure1, width=6, height=4)
+ggsave(paste0(result_path,"/Q6.b. EU-FTA-Other trade partners.pdf"),plot=figure2, width=6, height=4)
 
